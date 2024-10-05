@@ -16,6 +16,7 @@ from overcooked_ai_py.mdp.overcooked_mdp import (
 from overcooked_ai_py.static import TESTING_DATA_DIR
 from overcooked_ai_py.utils import generate_temporary_file_path, load_from_json
 from overcooked_ai_py.visualization.state_visualizer import StateVisualizer
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
 
 
 def get_file_count(directory_path):
@@ -257,7 +258,7 @@ class TestStateVisualizer(unittest.TestCase):
         self.assertEqual(custom_img_directory_path, result_img_directory_path)
         self.assertEqual(
             get_file_count(result_img_directory_path), expected_images_num
-        )
+        )    
 
 
 if __name__ == "__main__":

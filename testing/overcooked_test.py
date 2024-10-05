@@ -57,6 +57,9 @@ from overcooked_ai_py.utils import (
     save_as_json,
     save_pickle,
 )
+from overcooked_ai_py.visualization.state_visualizer import StateVisualizer
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv
+import pygame
 
 START_ORDER_LIST = ["any"]
 n, s = Direction.NORTH, Direction.SOUTH

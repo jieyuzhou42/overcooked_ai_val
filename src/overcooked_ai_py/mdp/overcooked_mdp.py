@@ -20,10 +20,21 @@ class Recipe:
 
     TOMATO = "tomato"
     ONION = "onion"
-    ALL_INGREDIENTS = [ONION, TOMATO]
+    BROTH = "broth"
+    TOMATO_SOUP = "tomato_soup"
+    ONION_SOUP = "onion_soup"
+    SOUP = "soup"
+    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP, ONION_SOUP, SOUP]
 
     ALL_RECIPES_CACHE = {}
-    STR_REP = {"tomato": "†", "onion": "ø"}
+    STR_REP = {
+        "tomato": "†", 
+        "onion": "ø",
+        "broth": "≋",
+        "tomato_soup": "↯",
+        "onion_soup": "⌾",
+        "soup": "◉"
+    }
 
     _computed = False
     _configured = False
@@ -403,7 +414,7 @@ class ObjectState(object):
         self._position = new_pos
 
     def is_valid(self):
-        return self.name in ["onion", "tomato", "dish"]
+        return self.name in ["onion", "tomato", "dish"] #！！！！！
 
     def deepcopy(self):
         return ObjectState(self.name, self.position)
@@ -1372,6 +1383,7 @@ class OvercookedGridworld(object):
         # There is a finite horizon, handled by the environment.
         return False
 
+    #！！！！！！
     def get_state_transition(
         self, state, joint_action, display_phi=False, motion_planner=None
     ):
@@ -1429,6 +1441,7 @@ class OvercookedGridworld(object):
             )
         return new_state, infos
 
+    #！！！！！
     def resolve_interacts(self, new_state, joint_action, events_infos):
         """
         Resolve any INTERACT actions, if present.

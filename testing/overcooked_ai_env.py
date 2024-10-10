@@ -284,11 +284,14 @@ class OvercookedAIEnv():
         return True
 
 if __name__ == "__main__":
-    horizon = 500
+    horizon = 5
     env = OvercookedAIEnv(player_id=1, horizon=horizon)
-    for i in range(horizon):
-        env.get_state()
-        actions = env.get_actions()
-        action = choice(actions)
-        env.execute_action(action_name=action['name'], args=[])
-        env.render_state()
+    #for i in range(horizon):
+    env.get_state()
+    actions = env.get_actions()
+    action = actions[3]
+    env.execute_action(action_name=action['name'], args=[])
+    env.render_state()
+    action = actions[2]
+    env.execute_action(action_name=action['name'], args=[])
+    env.render_state()

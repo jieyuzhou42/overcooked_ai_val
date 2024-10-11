@@ -1,0 +1,260 @@
+{"frames": {
+
+"broth.png":
+{
+	"frame": {"x":236,"y":1,"w":7,"h":9},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":4,"y":3,"w":7,"h":9},
+	"sourceSize": {"w":15,"h":15}
+},
+"broths.png":
+{
+	"frame": {"x":1,"y":1,"w":15,"h":15},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":15},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_broth.png":
+{
+	"frame": {"x":18,"y":1,"w":15,"h":14},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":14},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_onion_soup_base.png":
+{
+	"frame": {"x":96,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_onion_soup_base_onion.png":
+{
+	"frame": {"x":103,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_onion_soup_base_tomato.png":
+{
+	"frame": {"x":110,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_soup_base.png":
+{
+	"frame": {"x":120,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_soup_base_onion.png":
+{
+	"frame": {"x":124,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_soup_base_tomato.png":
+{
+	"frame": {"x":137,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_tomato_soup_base.png":
+{
+	"frame": {"x":138,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_tomato_soup_base_onion.png":
+{
+	"frame": {"x":152,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_finishing_tomato_soup_base_tomato.png":
+{
+	"frame": {"x":154,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_onion_soup_base.png":
+{
+	"frame": {"x":166,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_onion_soup_base_onion.png":
+{
+	"frame": {"x":171,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_onion_soup_base_tomato.png":
+{
+	"frame": {"x":180,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_soup_base.png":
+{
+	"frame": {"x":188,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_soup_base_onion.png":
+{
+	"frame": {"x":194,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_soup_base_tomato.png":
+{
+	"frame": {"x":205,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_tomato_soup_base.png":
+{
+	"frame": {"x":208,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_tomato_soup_base_onion.png":
+{
+	"frame": {"x":222,"y":1,"w":15,"h":12},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_making_tomato_soup_base_tomato.png":
+{
+	"frame": {"x":222,"y":18,"w":15,"h":12},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":2,"w":15,"h":12},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_onion.png":
+{
+	"frame": {"x":1,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_onion_broth.png":
+{
+	"frame": {"x":34,"y":1,"w":15,"h":14},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":14},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_onion_soup_base_adding_onion.png":
+{
+	"frame": {"x":18,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_onion_soup_base_adding_tomato.png":
+{
+	"frame": {"x":35,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_soup_base_adding_onion.png":
+{
+	"frame": {"x":52,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_soup_base_adding_tomato.png":
+{
+	"frame": {"x":66,"y":1,"w":15,"h":13},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_tomato.png":
+{
+	"frame": {"x":69,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_tomato_broth.png":
+{
+	"frame": {"x":50,"y":1,"w":15,"h":14},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":14},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_tomato_soup_base_adding_onion.png":
+{
+	"frame": {"x":81,"y":1,"w":15,"h":13},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+},
+"pot_tomato_soup_base_adding_tomato.png":
+{
+	"frame": {"x":86,"y":18,"w":15,"h":13},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":15,"h":13},
+	"sourceSize": {"w":15,"h":15}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "broth_related.png",
+	"format": "RGBA8888",
+	"size": {"w":244,"h":32},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:579be5e9f654b4f01a7513fd63b6a303:11b4b48857891db3a6a64047bb9d2913:c7c4478da83a9ee1de4ab7dfe82dbb7c$"
+}
+}

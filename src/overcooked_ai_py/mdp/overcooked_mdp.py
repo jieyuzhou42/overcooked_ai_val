@@ -21,19 +21,19 @@ class Recipe:
     TOMATO = "tomato"
     ONION = "onion"
     BROTH = "broth"
-    TOMATO_SOUP = "tomato_soup"
-    ONION_SOUP = "onion_soup"
-    SOUP = "soup"
-    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP, ONION_SOUP, SOUP]
+    TOMATO_SOUP_BASE = "tomato_soup_base"
+    ONION_SOUP_BASE = "onion_soup_base"
+    SOUP_BASE = "soup_base"
+    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP_BASE, ONION_SOUP_BASE, SOUP_BASE]
 
     ALL_RECIPES_CACHE = {}
     STR_REP = {
         "tomato": "†", 
         "onion": "ø",
         "broth": "≋",
-        "tomato_soup": "↯",
-        "onion_soup": "⌾",
-        "soup": "◉"
+        "tomato_soup_base": "↯",
+        "onion_soup_base": "⌾",
+        "soup_base": "◉"
     }
 
     _computed = False
@@ -414,7 +414,7 @@ class ObjectState(object):
         self._position = new_pos
 
     def is_valid(self):
-        return self.name in ["onion", "tomato", "dish"] #！！！！！
+        return self.name in ["onion", "tomato", "dish", "broth", "soup_base", "onion_soup_base", "tomato_soup_base"]
 
     def deepcopy(self):
         return ObjectState(self.name, self.position)

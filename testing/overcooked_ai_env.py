@@ -284,7 +284,7 @@ class OvercookedAIEnv():
         return True
 
 if __name__ == "__main__":
-    horizon = 5
+    horizon = 3
     env = OvercookedAIEnv(player_id=1, horizon=horizon)
     #for i in range(horizon):
     env.get_state()

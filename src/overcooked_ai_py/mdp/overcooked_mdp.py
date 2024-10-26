@@ -21,19 +21,19 @@ class Recipe:
     TOMATO = "tomato"
     ONION = "onion"
     BROTH = "broth"
-    TOMATO_SOUP_BASE = "tomato_soup_base"
-    ONION_SOUP_BASE = "onion_soup_base"
-    SOUP_BASE = "soup_base"
-    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP_BASE, ONION_SOUP_BASE, SOUP_BASE]
+    TOMATO_SOUP = "tomato_soup"
+    ONION_SOUP = "onion_soup"
+    SOUP = "soup"
+    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP, ONION_SOUP, SOUP]
 
     ALL_RECIPES_CACHE = {}
     STR_REP = {
         "tomato": "†", 
         "onion": "ø",
         "broth": "≋",
-        "tomato_soup_base": "↯",
-        "onion_soup_base": "⌾",
-        "soup_base": "◉"
+        "tomato_soup": "↯",
+        "onion_soup": "⌾",
+        "soup": "◉"
     }
 
     _computed = False
@@ -414,7 +414,7 @@ class ObjectState(object):
         self._position = new_pos
 
     def is_valid(self):
-        return self.name in ["onion", "tomato", "dish", "broth", "soup_base", "onion_soup_base", "tomato_soup_base"]
+        return self.name in ["onion", "tomato", "dish"] #！！！！！
 
     def deepcopy(self):
         return ObjectState(self.name, self.position)
@@ -525,11 +525,11 @@ class SoupBaseState(ObjectState):
                 "Recipe is not determined until soup begins cooking"
             )
         if not self._recipe:
-            if "onion" in self.ingredients:
+            if "onion" and "broth" in self.ingredients:
                 self._recipe = Recipe("onion_soup_base")
-            if "tomato" in self.ingredients:
+            if "tomato" and "broth" in self.ingredients:
                 self._recipe = Recipe("tomato_soup_base")
-            else:
+            if  "broth" in self.ingredients:
                 self._recipe = Recipe("soup_base")
         return self._recipe
 
@@ -1880,33 +1880,33 @@ class OvercookedGridworld(object):
                 return recipe.value
 
             return self.order_bonus * recipe.value
-        else:
-            # Calculate missing ingredients needed to complete recipe
-            missing_ingredients = list(recipe.ingredients)
-            prev_ingredients = (
-                list(base_recipe.ingredients) if base_recipe else []
-            )
-            for ingredient in prev_ingredients:
-                missing_ingredients.remove(ingredient)
-            n_tomatoes = len(
-                [i for i in missing_ingredients if i == Recipe.TOMATO]
-            )
-            n_onions = len(
-                [i for i in missing_ingredients if i == Recipe.ONION]
-            )
+        # else:
+        #     # Calculate missing ingredients needed to complete recipe
+        #     missing_ingredients = list(recipe.ingredients)
+        #     prev_ingredients = (
+        #         list(base_recipe.ingredients) if base_recipe else []
+        #     )
+        #     for ingredient in prev_ingredients:
+        #         missing_ingredients.remove(ingredient)
+        #     n_tomatoes = len(
+        #         [i for i in missing_ingredients if i == Recipe.TOMATO]
+        #     )
+        #     n_onions = len(
+        #         [i for i in missing_ingredients if i == Recipe.ONION]
+        #     )
 
-            gamma, pot_onion_steps, pot_tomato_steps = (
-                potential_params["gamma"],
-                potential_params["pot_onion_steps"],
-                potential_params["pot_tomato_steps"],
-            )
+        #     gamma, pot_onion_steps, pot_tomato_steps = (
+        #         potential_params["gamma"],
+        #         potential_params["pot_onion_steps"],
+        #         potential_params["pot_tomato_steps"],
+        #     )
 
-            return (
-                gamma**recipe.time
-                * gamma ** (pot_onion_steps * n_onions)
-                * gamma ** (pot_tomato_steps * n_tomatoes)
-                * self.get_recipe_value(state, recipe, discounted=False)
-            )
+        #     return (
+        #         gamma**recipe.time
+        #         * gamma ** (pot_onion_steps * n_onions)
+        #         * gamma ** (pot_tomato_steps * n_tomatoes)
+        #         * self.get_recipe_value(state, recipe, discounted=False)
+        #     )
 
     def deliver_soup(self, state, player, soup):
         """

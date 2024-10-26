@@ -13,6 +13,8 @@ from overcooked_ai_py.mdp.layout_generator import (
     POT,
     SERVING_LOC,
     TOMATO_DISPENSER,
+    BROTH_DISPENSER,
+
 )
 from overcooked_ai_py.static import FONTS_DIR, GRAPHICS_DIR
 from overcooked_ai_py.utils import (
@@ -52,6 +54,12 @@ class StateVisualizer:
         os.path.join(GRAPHICS_DIR, "chefs.png"),
         os.path.join(GRAPHICS_DIR, "chefs.json"),
     )
+
+    BROTH_IMG = MultiFramePygameImage(
+        os.path.join(GRAPHICS_DIR, "broth_related.png"),
+        os.path.join(GRAPHICS_DIR, "broth_related.json"),
+    )
+
     ARROW_IMG = pygame.image.load(os.path.join(GRAPHICS_DIR, "arrow.png"))
     INTERACT_IMG = pygame.image.load(
         os.path.join(GRAPHICS_DIR, "interact.png")
@@ -100,6 +108,7 @@ class StateVisualizer:
         POT: "pot",
         DISH_DISPENSER: "dishes",
         SERVING_LOC: "serve",
+        BROTH_DISPENSER:"broths",
     }
 
     def __init__(self, **kwargs):

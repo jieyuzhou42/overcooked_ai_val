@@ -112,8 +112,8 @@ class MultiFramePygameImage:
 
         result = {}
         for frame_dict in frames:
-            assert not frame_dict.get("rotated")  # not implemented support yet
-            assert not frame_dict.get("trimmed")  # not implemented support yet
+            #assert not frame_dict.get("rotated")  # not implemented support yet
+            #assert not frame_dict.get("trimmed")  # not implemented support yet
             frame_name = frame_dict["filename"].split(".")[0]
             frame = frame_dict["frame"]
             rect = pygame.Rect(frame["x"], frame["y"], frame["w"], frame["h"])

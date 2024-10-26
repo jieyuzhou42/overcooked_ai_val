@@ -1380,7 +1380,7 @@ class OvercookedGridworld(object):
         **kwargs
     ):
         """
-        terrain: a matrix of strings that encode the MDP layout
+        terrain: a matrix of strings that encode the ƒ
         layout_name: string identifier of the layout
         start_player_positions: tuple of positions for both players' starting positions
         start_bonus_orders: List of recipes dicts that are worth a bonus
@@ -2358,7 +2358,7 @@ class OvercookedGridworld(object):
 
         # Borders must not be free spaces
         def is_not_free(c):
-            return c in "XOPDST"
+            return c in "XOPDSTB"
 
         for y in range(height):
             assert is_not_free(grid[y][0]), "Left border must not be free"
@@ -2378,7 +2378,7 @@ class OvercookedGridworld(object):
         ), "Some players were missing"
 
         assert all(
-            c in "XOPDST123456789 " for c in all_elements
+            c in "XOPDSTB123456789 " for c in all_elements
         ), "Invalid character in grid"
         assert all_elements.count("1") == 1, "'1' must be present exactly once"
         assert (
@@ -2393,6 +2393,9 @@ class OvercookedGridworld(object):
         assert (
             all_elements.count("O") >= 1 or all_elements.count("T") >= 1
         ), "'O' or 'T' must be present at least once"
+        assert (
+            all_elements.count("B") >= 1 
+        ), "'B' must be present at least once"
 
     ################################
     # EVENT LOGGING HELPER METHODS #

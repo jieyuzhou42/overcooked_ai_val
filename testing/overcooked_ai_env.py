@@ -72,7 +72,7 @@ class OvercookedRouteProblem(Problem):
 
 class OvercookedAIEnv():
 
-    def __init__(self, player_id=0, horizon=100, layout="asymmetric_advantages", render=True):
+    def __init__(self, player_id=0, horizon=100, layout="sr_testing", render=True):
         """
         Full list of layouts here:
         https://github.com/HumanCompatibleAI/overcooked_ai/tree/cb2e50cae95accbe4618879d88e565c87c54b1c3/src/overcooked_ai_py/data/layouts
@@ -284,14 +284,11 @@ class OvercookedAIEnv():
         return True
 
 if __name__ == "__main__":
-    horizon = 3
-    env = OvercookedAIEnv(player_id=1, horizon=horizon)
-    #for i in range(horizon):
-    env.get_state()
-    actions = env.get_actions()
-    action = actions[3]
-    env.execute_action(action_name=action['name'], args=[])
-    env.render_state()
-    action = actions[2]
-    env.execute_action(action_name=action['name'], args=[])
-    env.render_state()
+    horizon = 500
+    env = OvercookedAIEnv(player_id=0, horizon=horizon)
+    for i in range(horizon):
+        env.get_state()
+        actions = env.get_actions()
+        action = choice(actions)
+        env.execute_action(action_name=action['name'], args=[])
+        env.render_state()

@@ -139,6 +139,26 @@
 				"w": 15,
 				"h": 15
 			}
+		},
+		"broths.png": {
+			"frame": {
+				"x": 120,
+				"y": 1,
+				"w": 15,
+				"h": 15
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 15,
+				"h": 15
+			},
+			"sourceSize": {
+				"w": 15,
+				"h": 15
+			}
 		}
 	},
 	"meta": {
@@ -147,7 +167,7 @@
 		"image": "spritesheet.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 119,
+			"w": 136,
 			"h": 17
 		},
 		"scale": "1"

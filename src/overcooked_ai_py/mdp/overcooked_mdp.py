@@ -21,22 +21,19 @@ class Recipe:
     TOMATO = "tomato"
     ONION = "onion"
     BROTH = "broth"
-    TOMATO_SOUP = "tomato_soup"
-    ONION_SOUP = "onion_soup"
-    SOUP = "soup"
     TOMATO_SOUP_BASE = "tomato_soup_base"
     ONION_SOUP_BASE = "onion_soup_base"
     SOUP_BASE = "soup_base"
-    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP, ONION_SOUP, SOUP, TOMATO_SOUP_BASE, ONION_SOUP_BASE, SOUP_BASE]
+    ALL_INGREDIENTS = [ONION, TOMATO, BROTH, TOMATO_SOUP_BASE, ONION_SOUP_BASE, SOUP_BASE]
 
     ALL_RECIPES_CACHE = {}
     STR_REP = {
         "tomato": "†", 
         "onion": "ø",
         "broth": "≋",
-        "tomato_soup": "↯",
-        "onion_soup": "⌾",
-        "soup": "◉"
+        "tomato_soup_base": "↯",
+        "onion_soup_base": "⌾",
+        "soup_base": "◉"
     }
 
     _computed = False
@@ -417,7 +414,7 @@ class ObjectState(object):
         self._position = new_pos
 
     def is_valid(self):
-        return self.name in ["onion", "tomato", "dish", "broth"]
+        return self.name in ["onion", "tomato", "dish", "broth"] 
 
     def deepcopy(self):
         return ObjectState(self.name, self.position)
@@ -463,7 +460,7 @@ class SoupBaseState(ObjectState):
         cooking (int): How long the soup has been cooking for. -1 means cooking hasn't started yet
         cook_time(int): How long soup needs to be cooked, used only mostly for getting soup from dict with supplied cook_time, if None self.recipe.time is used
         """
-        super().__init__("soupbase", position)
+        super(SoupState, self).__init__("soupbase", position)
         self._ingredients = ingredients
         self._cooking_tick = cooking_tick
         self._recipe = None
@@ -471,7 +468,7 @@ class SoupBaseState(ObjectState):
 
     def __eq__(self, other):
         return (
-            isinstance(other, SoupBaseState)
+            isinstance(other, SoupState)
             and self.name == other.name
             and self.position == other.position
             and self._cooking_tick == other._cooking_tick
@@ -525,7 +522,7 @@ class SoupBaseState(ObjectState):
     def recipe(self):
         if self.is_idle:
             raise ValueError(
-                "Recipe is not determined until soupbase begins cooking"
+                "Recipe is not determined until soup begins cooking"
             )
         if not self._recipe:
             if "onion" and "broth" in self.ingredients:
@@ -583,7 +580,7 @@ class SoupBaseState(ObjectState):
 
     def auto_finish(self):
         if len(self.ingredients) == 0:
-            raise ValueError("Cannot finish soupbase with no ingredients")
+            raise ValueError("Cannot finish soup with no ingredients")
         self._cooking_tick = 0
         self._cooking_tick = self.cook_time
 
@@ -610,10 +607,10 @@ class SoupBaseState(ObjectState):
 
     def begin_cooking(self):
         if not self.is_idle:
-            raise ValueError("Cannot begin cooking this soupbase at this time")
+            raise ValueError("Cannot begin cooking this soup at this time")
         if len(self.ingredients) == 0:
             raise ValueError(
-                "Must add at least one ingredient to soupbase before you can begin cooking"
+                "Must add at least one ingredient to soup before you can begin cooking"
             )
         self._cooking_tick = 0
 
@@ -666,21 +663,13 @@ class SoupBaseState(ObjectState):
                     cooking_tick=cooking_tick,
                     finished=finished,
                 )
-            if ingredient == Recipe.ONION:
+            else:
                 return SoupBaseState.get_soupbase(
                     obj_dict["position"],
                     num_onions=num_ingredient,
                     cooking_tick=cooking_tick,
                     finished=finished,
                 )
-            else:
-                return SoupBaseState.get_soupbase(
-                    obj_dict["position"],
-                    num_broths=num_ingredient,
-                    cooking_tick=cooking_tick,
-                    finished=finished,
-                )
-                
 
         ingredients_objs = [
             ObjectState.from_dict(ing_dict)
@@ -693,16 +682,18 @@ class SoupBaseState(ObjectState):
     def get_soupbase(
         cls,
         position,
+        num_broths=1,
         num_onions=1,
         num_tomatoes=0,
-        num_broths=0,
         cooking_tick=-1,
         finished=False,
         **kwargs
     ):
         if num_onions < 0 or num_tomatoes < 0:
             raise ValueError("Number of active ingredients must be positive")
-        if num_onions + num_tomatoes > Recipe.MAX_NUM_INGREDIENTS:
+        if num_broths <0:
+            raise ValueError("Should have broth to cook soup base")
+        if num_onions + num_tomatoes + num_broths > Recipe.MAX_NUM_INGREDIENTS:
             raise ValueError("Too many ingredients specified for this soup")
         if cooking_tick >= 0 and num_tomatoes + num_onions == 0:
             raise ValueError("_cooking_tick must be -1 for empty soup")
@@ -3207,3 +3198,402 @@ class OvercookedGridworld(object):
             return (0, 0)
         dy_loc, dx_loc = pos_distance(location, player.position)
         return dy_loc, dx_loc
+
+    ###############################
+    # POTENTIAL REWARD SHAPING FN #
+    ###############################
+
+    def potential_function(self, state, mp, gamma=0.99):
+        """
+        Essentially, this is the ɸ(s) function.
+
+        The main goal here to to approximately infer the actions of an optimal agent, and derive an estimate for the value
+        function of the optimal policy. The perfect potential function is indeed the value function
+
+        At a high level, we assume each agent acts independetly, and greedily optimally, and then, using the decay factor "gamma",
+        we calculate the expected discounted reward under this policy
+
+        Some implementation details:
+            * the process of delivering a soup is broken into 4 steps
+                * Step 1: placing the first ingredient into an empty pot
+                * Step 2: placing the remaining ingredients in the pot
+                * Step 3: cooking the soup/retreiving a dish with which to serve the soup
+                * Step 4: delivering the soup once it is in a dish
+            * Here is an exhaustive list of the greedy assumptions made at each step
+                * step 1:
+                    * If an agent is holding an ingredient that could be used to cook an optimal soup, it will use it in that soup
+                    * If no such optimal soup exists, but there is an empty pot, the agent will place the ingredient there
+                    * If neither of the above cases holds, no potential is awarded for possessing the ingredient
+                * step 2:
+                    * The agent will always try to cook the highest valued soup possible based on the current ingredients in a pot
+                    * Any agent possessing a missing ingredient for an optimal soup will travel directly to the closest such pot
+                    * If the optimal soup has all ingredients, the closest agent not holding anything will go to cook it
+                * step 3:
+                    * Any player holding a dish attempts to serve the highest valued soup based on recipe values and cook time remaining
+                * step 4:
+                    * Any agent holding a soup will go directly to the nearest serving area
+            * At every step, the expected reward is discounted by multiplying the optimal reward by gamma ^ (estimated #steps to complete greedy action)
+            * In the case that certain actions are infeasible (i.e. an agent is holding a soup in step 4, but no path exists to a serving
+              area), estimated number of steps in order to complete the action defaults to `max_steps`
+            * Cooperative behavior between the two agents is not considered for complexity reasons
+            * Soups that are worth <1 points are rounded to be worth 1 point. This is to incentivize the agent to cook a worthless soup
+              that happens to be in a pot in order to free up the pot
+
+        Parameters:
+            state: OvercookedState instance representing the state to evaluate potential for
+            mp: MotionPlanner instance used to calculate gridworld distances to objects
+            gamma: float, discount factor
+            max_steps: int, number of steps a high level action is assumed to take in worst case
+
+        Returns
+            phi(state), the potential of the state
+        """
+        if not hasattr(Recipe, "_tomato_value") or not hasattr(
+            Recipe, "_onion_value"
+        ):
+            raise ValueError(
+                "Potential function requires Recipe onion and tomato values to work properly"
+            )
+
+        # Constants needed for potential function
+        potential_params = {
+            "gamma": gamma,
+            "tomato_value": Recipe._tomato_value
+            if Recipe._tomato_value
+            else 13,
+            "onion_value": Recipe._onion_value if Recipe._onion_value else 21,
+            **POTENTIAL_CONSTANTS.get(
+                self.layout_name, POTENTIAL_CONSTANTS["default"]
+            ),
+        }
+        pot_states = self.get_pot_states(state)
+
+        # Base potential value is the geometric sum of making optimal soups infinitely
+        (
+            opt_recipe,
+            discounted_opt_recipe_value,
+        ) = self.get_optimal_possible_recipe(
+            state,
+            None,
+            discounted=True,
+            potential_params=potential_params,
+            return_value=True,
+        )
+        opt_recipe_value = self.get_recipe_value(state, opt_recipe)
+        discount = discounted_opt_recipe_value / opt_recipe_value
+        steady_state_value = (discount / (1 - discount)) * opt_recipe_value
+        potential = steady_state_value
+
+        # Get list of all soups that have >0 ingredients, sorted based on value of best possible recipe
+        idle_soups = [
+            state.get_object(pos)
+            for pos in self.get_full_but_not_cooking_pots(pot_states)
+        ]
+        idle_soups.extend(
+            [
+                state.get_object(pos)
+                for pos in self.get_partially_full_pots(pot_states)
+            ]
+        )
+        idle_soups = sorted(
+            idle_soups,
+            key=lambda soup: self.get_optimal_possible_recipe(
+                state,
+                Recipe(soup.ingredients),
+                discounted=True,
+                potential_params=potential_params,
+                return_value=True,
+            )[1],
+            reverse=True,
+        )
+
+        # Build mapping of non_idle soups to the potential value each one will contribue
+        # Default potential value is maximimal discount for last two steps applied to optimal recipe value
+        cooking_soups = [
+            state.get_object(pos) for pos in self.get_cooking_pots(pot_states)
+        ]
+        done_soups = [
+            state.get_object(pos) for pos in self.get_ready_pots(pot_states)
+        ]
+        non_idle_soup_vals = {
+            soup: gamma
+            ** (
+                potential_params["max_delivery_steps"]
+                + max(
+                    potential_params["max_pickup_steps"],
+                    soup.cook_time - soup._cooking_tick,
+                )
+            )
+            * max(self.get_recipe_value(state, soup.recipe), 1)
+            for soup in cooking_soups + done_soups
+        }
+
+        # Get descriptive list of players based on different attributes
+        # Note that these lists are mutually exclusive
+        players_holding_soups = [
+            player
+            for player in state.players
+            if player.has_object() and player.get_object().name == "soup"
+        ]
+        players_holding_dishes = [
+            player
+            for player in state.players
+            if player.has_object() and player.get_object().name == "dish"
+        ]
+        players_holding_tomatoes = [
+            player
+            for player in state.players
+            if player.has_object()
+            and player.get_object().name == Recipe.TOMATO
+        ]
+        players_holding_onions = [
+            player
+            for player in state.players
+            if player.has_object() and player.get_object().name == Recipe.ONION
+        ]
+        players_holding_nothing = [
+            player for player in state.players if not player.has_object()
+        ]
+
+        ### Step 4 potential ###
+
+        # Add potential for each player with a soup
+        for player in players_holding_soups:
+            # Even if delivery_dist is infinite, we still award potential (as an agent might need to pass the soup to other player first)
+            delivery_dist = mp.min_cost_to_feature(
+                player.pos_and_or, self.terrain_pos_dict["S"]
+            )
+            potential += gamma ** min(
+                delivery_dist, potential_params["max_delivery_steps"]
+            ) * max(
+                self.get_recipe_value(state, player.get_object().recipe), 1
+            )
+
+        ### Step 3 potential ###
+
+        # Reweight each non-idle soup value based on agents with dishes performing greedily-optimally as outlined in docstring
+        for player in players_holding_dishes:
+            best_pickup_soup = None
+            best_pickup_value = 0
+
+            # find best soup to pick up with dish agent currently has
+            for soup in non_idle_soup_vals:
+                # How far away the soup is (inf if not-reachable)
+                pickup_dist = mp.min_cost_to_feature(
+                    player.pos_and_or, [soup.position]
+                )
+
+                # mask to award zero score if not reachable
+                # Note: this means that potentially "useful" dish pickups (where agent passes dish to other agent
+                # that can reach the soup) do not recive a potential bump
+                is_useful = int(pickup_dist < np.inf)
+
+                # Always assume worst-case discounting for step 4, and bump zero-valued soups to 1 as mentioned in docstring
+                pickup_soup_value = gamma ** potential_params[
+                    "max_delivery_steps"
+                ] * max(self.get_recipe_value(state, soup.recipe), 1)
+                cook_time_remaining = soup.cook_time - soup._cooking_tick
+                discount = gamma ** max(
+                    cook_time_remaining,
+                    min(pickup_dist, potential_params["max_pickup_steps"]),
+                )
+
+                # Final discount-adjusted value for this player pursuing this soup
+                pickup_value = discount * pickup_soup_value * is_useful
+
+                # Update best soup found for this player
+                if pickup_dist < np.inf and pickup_value > best_pickup_value:
+                    best_pickup_soup = soup
+                    best_pickup_value = pickup_value
+
+            # Set best-case score for this soup. Can only improve upon previous players policies
+            # Note cooperative policies between players not considered
+            if best_pickup_soup:
+                non_idle_soup_vals[best_pickup_soup] = max(
+                    non_idle_soup_vals[best_pickup_soup], best_pickup_value
+                )
+
+        # Apply potential for each idle soup as calculated above
+        for soup in non_idle_soup_vals:
+            potential += non_idle_soup_vals[soup]
+
+        ### Step 2 potential ###
+
+        # Iterate over idle soups in decreasing order of value so we greedily prioritize higher valued soups
+        for soup in idle_soups:
+            # Calculate optimal recipe
+            curr_recipe = Recipe(soup.ingredients)
+            opt_recipe = self.get_optimal_possible_recipe(
+                state,
+                curr_recipe,
+                discounted=True,
+                potential_params=potential_params,
+            )
+
+            # Calculate missing ingredients needed to complete optimal recipe
+            missing_ingredients = list(opt_recipe.ingredients)
+            for ingredient in soup.ingredients:
+                missing_ingredients.remove(ingredient)
+
+            # Base discount for steps 3-4
+            discount = gamma ** (
+                max(potential_params["max_pickup_steps"], opt_recipe.time)
+                + potential_params["max_delivery_steps"]
+            )
+
+            # Add a multiplicative discount for each needed ingredient (this has the effect of giving more award to soups
+            # that are closer to being completed)
+            for ingredient in missing_ingredients:
+                # Players who might have an ingredient we need
+                pertinent_players = (
+                    players_holding_tomatoes
+                    if ingredient == Recipe.TOMATO
+                    else players_holding_onions
+                )
+                dist = np.inf
+                closest_player = None
+
+                # Find closest player with ingredient we need
+                for player in pertinent_players:
+                    curr_dist = mp.min_cost_to_feature(
+                        player.pos_and_or, [soup.position]
+                    )
+                    if curr_dist < dist:
+                        dist = curr_dist
+                        closest_player = player
+
+                # Update discount to account for adding this missing ingredient (defaults to min_coeff if no pertinent players exist)
+                discount *= gamma ** min(
+                    dist, potential_params["pot_{}_steps".format(ingredient)]
+                )
+
+                # Cross off this player's ingreident contribution so it can't be double-counted
+                if closest_player:
+                    pertinent_players.remove(closest_player)
+
+            # Update discount to account for time it takes to start the soup cooking once last ingredient is added
+            if missing_ingredients:
+                # We assume it only takes one timestep if there are missing ingredients since the agent delivering the last ingredient
+                # will be at the pot already
+                discount *= gamma
+            else:
+                # Otherwise, we assume that every player holding nothing will make a beeline to this soup since it's already optimal
+                cook_dist = min(
+                    [
+                        mp.min_cost_to_feature(
+                            player.pos_and_or, [soup.position]
+                        )
+                        for player in players_holding_nothing
+                    ],
+                    default=np.inf,
+                )
+                discount *= gamma ** min(
+                    cook_dist, potential_params["max_pickup_steps"]
+                )
+
+            potential += discount * max(
+                self.get_recipe_value(state, opt_recipe), 1
+            )
+
+        ### Step 1 Potential ###
+
+        # Add potential for each tomato that is left over after using all others to complete optimal recipes
+        for player in players_holding_tomatoes:
+            # will be inf if there exists no empty pot that is reachable
+            dist = mp.min_cost_to_feature(
+                player.pos_and_or, self.get_empty_pots(pot_states)
+            )
+            is_useful = int(dist < np.inf)
+            discount = (
+                gamma
+                ** (
+                    min(potential_params["pot_tomato_steps"], dist)
+                    + potential_params["max_pickup_steps"]
+                    + potential_params["max_delivery_steps"]
+                )
+                * is_useful
+            )
+            potential += discount * potential_params["tomato_value"]
+
+        # Add potential for each onion that is remaining after using others to complete optimal recipes if possible
+        for player in players_holding_onions:
+            dist = mp.min_cost_to_feature(
+                player.pos_and_or, self.get_empty_pots(pot_states)
+            )
+            is_useful = int(dist < np.inf)
+            discount = (
+                gamma
+                ** (
+                    min(potential_params["pot_onion_steps"], dist)
+                    + potential_params["max_pickup_steps"]
+                    + potential_params["max_delivery_steps"]
+                )
+                * is_useful
+            )
+            potential += discount * potential_params["onion_value"]
+
+        # At last
+        return potential
+
+    ##############
+    # DEPRECATED #
+    ##############
+
+    # def calculate_distance_based_shaped_reward(self, state, new_state):
+    #     """
+    #     Adding reward shaping based on distance to certain features.
+    #     """
+    #     distance_based_shaped_reward = 0
+    #
+    #     pot_states = self.get_pot_states(new_state)
+    #     ready_pots = pot_states["tomato"]["ready"] + pot_states["onion"]["ready"]
+    #     cooking_pots = ready_pots + pot_states["tomato"]["cooking"] + pot_states["onion"]["cooking"]
+    #     nearly_ready_pots = cooking_pots + pot_states["tomato"]["partially_full"] + pot_states["onion"]["partially_full"]
+    #     dishes_in_play = len(new_state.player_objects_by_type['dish'])
+    #     for player_old, player_new in zip(state.players, new_state.players):
+    #         # Linearly increase reward depending on vicinity to certain features, where distance of 10 achieves 0 reward
+    #         max_dist = 8
+    #
+    #         if player_new.held_object is not None and player_new.held_object.name == 'dish' and len(nearly_ready_pots) >= dishes_in_play:
+    #             min_dist_to_pot_new = np.inf
+    #             min_dist_to_pot_old = np.inf
+    #             for pot in nearly_ready_pots:
+    #                 new_dist = np.linalg.norm(np.array(pot) - np.array(player_new.position))
+    #                 old_dist = np.linalg.norm(np.array(pot) - np.array(player_old.position))
+    #                 if new_dist < min_dist_to_pot_new:
+    #                     min_dist_to_pot_new = new_dist
+    #                 if old_dist < min_dist_to_pot_old:
+    #                     min_dist_to_pot_old = old_dist
+    #             if min_dist_to_pot_old > min_dist_to_pot_new:
+    #                 distance_based_shaped_reward += self.reward_shaping_params["POT_DISTANCE_REW"] * (1 - min(min_dist_to_pot_new / max_dist, 1))
+    #
+    #         if player_new.held_object is None and len(cooking_pots) > 0 and dishes_in_play == 0:
+    #             min_dist_to_d_new = np.inf
+    #             min_dist_to_d_old = np.inf
+    #             for serving_loc in self.terrain_pos_dict['D']:
+    #                 new_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_new.position))
+    #                 old_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_old.position))
+    #                 if new_dist < min_dist_to_d_new:
+    #                     min_dist_to_d_new = new_dist
+    #                 if old_dist < min_dist_to_d_old:
+    #                     min_dist_to_d_old = old_dist
+    #
+    #             if min_dist_to_d_old > min_dist_to_d_new:
+    #                 distance_based_shaped_reward += self.reward_shaping_params["DISH_DISP_DISTANCE_REW"] * (1 - min(min_dist_to_d_new / max_dist, 1))
+    #
+    #         if player_new.held_object is not None and player_new.held_object.name == 'soup':
+    #             min_dist_to_s_new = np.inf
+    #             min_dist_to_s_old = np.inf
+    #             for serving_loc in self.terrain_pos_dict['S']:
+    #                 new_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_new.position))
+    #                 old_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_old.position))
+    #                 if new_dist < min_dist_to_s_new:
+    #                     min_dist_to_s_new = new_dist
+    #
+    #                 if old_dist < min_dist_to_s_old:
+    #                     min_dist_to_s_old = old_dist
+    #
+    #             if min_dist_to_s_old > min_dist_to_s_new:
+    #                 distance_based_shaped_reward += self.reward_shaping_params["SOUP_DISTANCE_REW"] * (1 - min(min_dist_to_s_new / max_dist, 1))
+    #
+    #     return distance_based_shaped_reward

@@ -38,7 +38,7 @@ class OvercookedEnv(object):
     The environment keeps track of the current state of the agent, updates
     it as the agent takes actions, and provides rewards to the agent.
 
-    E.g. of how to instantiate OvercookedEnv:
+    E.g. of how to instantiate OvercookedEfnv:
     > mdp = OvercookedGridworld(...)
     > env = OvercookedEnv.from_mdp(mdp, horizon=400)
     """

@@ -284,14 +284,26 @@ class OvercookedAIEnv():
         return True
 
 if __name__ == "__main__":
-    horizon = 3
+    horizon = 100
     env = OvercookedAIEnv(player_id=1, horizon=horizon)
     #for i in range(horizon):
     env.get_state()
     actions = env.get_actions()
-    action = actions[3]
-    env.execute_action(action_name=action['name'], args=[])
-    env.render_state()
-    action = actions[2]
-    env.execute_action(action_name=action['name'], args=[])
-    env.render_state()
+    env.execute_action(action_name="go_to", args=['onion_dispenser'])
+    env.execute_action(action_name="interact", args=['onion_dispenser'])
+    env.execute_action(action_name="go_to", args=['pot'])
+    env.execute_action(action_name="interact", args=['pot'])
+    env.execute_action(action_name="interact", args=['pot'])
+    env.execute_action(action_name="wait20", args=[])
+    env.execute_action(action_name="go_to", args=['dish_dispenser'])
+    env.execute_action(action_name="interact", args=['dish_dispenser'])
+    env.execute_action(action_name="go_to", args=['pot'])
+    env.execute_action(action_name="interact", args=['pot'])
+    env.execute_action(action_name="go_to", args=['serving_pad'])
+    env.execute_action(action_name="interact", args=['serving_pad'])
+    # action = actions[0]
+    # env.execute_action(action_name=action['name'], args=['onion_dispenser'])
+    # env.render_state()
+    # action = actions[2]
+    # env.execute_action(action_name=action['name'], args=[])
+    # env.render_state()

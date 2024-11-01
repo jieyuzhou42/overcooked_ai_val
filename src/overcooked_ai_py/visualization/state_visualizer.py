@@ -418,7 +418,10 @@ class StateVisualizer:
                     else:
                         held_object_name = "soup-tomato"
                 else:
-                    held_object_name = held_obj.name
+                    if held_obj.name == "broth":
+                        held_object_name = "tomato"
+                    else:
+                        held_object_name = held_obj.name
 
             self.CHEFS_IMG.blit_on_surface(
                 surface,

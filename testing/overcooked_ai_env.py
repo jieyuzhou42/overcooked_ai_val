@@ -55,6 +55,8 @@ class OvercookedRouteProblem(Problem):
             return target == 'D'
         if goal == "tomato_dispenser":
             return target == 'T'
+        if goal == "broth_dispenser":
+            return target == 'B'
         if goal == "serving_pad":
             return target == 'S'
         if goal == "pot":
@@ -286,12 +288,12 @@ class OvercookedAIEnv():
 
 if __name__ == "__main__":
     horizon = 100
-    env = OvercookedAIEnv(player_id=1, horizon=horizon)
+    env = OvercookedAIEnv(player_id=0, horizon=horizon)
     #for i in range(horizon):
     env.get_state()
     actions = env.get_actions()
-    env.execute_action(action_name="go_to", args=['onion_dispenser'])
-    env.execute_action(action_name="interact", args=['onion_dispenser'])
+    env.execute_action(action_name="go_to", args=['broth_dispenser'])
+    env.execute_action(action_name="interact", args=['broth_dispenser'])
     env.execute_action(action_name="go_to", args=['pot'])
     env.execute_action(action_name="interact", args=['pot'])
     env.execute_action(action_name="interact", args=['pot'])

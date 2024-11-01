@@ -1315,6 +1315,12 @@ EVENT_TYPES = [
     "tomato_drop",
     "useful_tomato_drop",
     "potting_tomato",
+    # Tomato events
+    "broth_pickup",
+    "useful_broth_pickup",
+    "broth_drop",
+    "useful_broth_drop",
+    "potting_broth",
     # Onion events
     "onion_pickup",
     "useful_onion_pickup",
@@ -1333,12 +1339,16 @@ EVENT_TYPES = [
     # Potting events
     "optimal_onion_potting",
     "optimal_tomato_potting",
+    "optimal_broth_potting",
     "viable_onion_potting",
     "viable_tomato_potting",
+    "viable_broth_potting",
     "catastrophic_onion_potting",
     "catastrophic_tomato_potting",
+    "catastrophic_broth_potting",
     "useless_onion_potting",
     "useless_tomato_potting",
+    "useless_broth_potting",
 ]
 
 POTENTIAL_CONSTANTS = {
@@ -1782,6 +1792,10 @@ class OvercookedGridworld(object):
             elif terrain_type == "T" and player.held_object is None:
                 # Tomato pickup from dispenser
                 player.set_object(ObjectState("tomato", pos))
+                
+            elif terrain_type == "B" and player.held_object is None:
+                # Tomato pickup from dispenser
+                player.set_object(ObjectState("broth", pos))
 
             elif terrain_type == "D" and player.held_object is None:
                 self.log_object_pickup(
@@ -2078,6 +2092,9 @@ class OvercookedGridworld(object):
 
     def get_tomato_dispenser_locations(self):
         return list(self.terrain_pos_dict["T"])
+    
+    def get_broth_dispenser_locations(self):
+        return list(self.terrain_pos_dict["B"])
 
     def get_serving_locations(self):
         return list(self.terrain_pos_dict["S"])
@@ -2437,6 +2454,7 @@ class OvercookedGridworld(object):
         USEFUL_PICKUP_FNS = {
             "tomato": self.is_ingredient_pickup_useful,
             "onion": self.is_ingredient_pickup_useful,
+            "broth": self.is_ingredient_pickup_useful,
             "dish": self.is_dish_pickup_useful,
         }
         if obj_name in USEFUL_PICKUP_FNS:
@@ -2743,6 +2761,9 @@ class OvercookedGridworld(object):
 
             for loc in self.get_tomato_dispenser_locations():
                 state_mask_dict["tomato_disp_loc"][loc] = 1
+            
+            for loc in self.get_broth_dispenser_locations():
+                state_mask_dict["broth_disp_loc"][loc] = 1
 
             for loc in self.get_dish_dispenser_locations():
                 state_mask_dict["dish_disp_loc"][loc] = 1
@@ -3068,6 +3089,16 @@ class OvercookedGridworld(object):
                     "tomato",
                     self.get_tomato_dispenser_locations()
                     + counter_objects["tomato"],
+                ),
+            )
+            all_features = concat_dicts(
+                all_features,
+                make_closest_feature(
+                    i,
+                    player,
+                    "broth",
+                    self.get_broth_dispenser_locations()
+                    + counter_objects["broth"],
                 ),
             )
             all_features = concat_dicts(

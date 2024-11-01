@@ -18,8 +18,6 @@ from py_search.base import Problem
 from py_search.base import Node
 from py_search.informed import best_first_search
 
-#from val.env_interfaces.abstract_interface import AbstractEnvInterface
-
 
 class OvercookedRouteProblem(Problem):
 
@@ -194,6 +192,9 @@ class OvercookedAIEnv():
 
         for x, y in self.base_env.mdp.get_tomato_dispenser_locations():
             state.append({'object': 'tomato_dispenser', 'x': x, 'y': y})
+        
+        for x, y in self.base_env.mdp.get_broth_dispenser_locations():
+            state.append({'object': 'broth_dispenser', 'x': x, 'y': y})
 
         for x, y in self.base_env.mdp.get_serving_locations():
             state.append({'object': 'serving_pad', 'x': x, 'y': y})
@@ -301,6 +302,7 @@ if __name__ == "__main__":
     env.execute_action(action_name="interact", args=['pot'])
     env.execute_action(action_name="go_to", args=['serving_pad'])
     env.execute_action(action_name="interact", args=['serving_pad'])
+    env.execute_action(action_name="go_to", args=['onion_dispenser'])
     # action = actions[0]
     # env.execute_action(action_name=action['name'], args=['onion_dispenser'])
     # env.render_state()

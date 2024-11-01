@@ -7,14 +7,13 @@ with open("README.md", "r", encoding="UTF8") as fh:
 
 setup(
     name="overcooked_ai",
-    version="1.1.0",
+    version="2.0",
     description="Cooperative multi-agent environment based on Overcooked",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Micah Carroll",
     author_email="mdc@berkeley.edu",
-    url="https://github.com/HumanCompatibleAI/overcooked_ai",
-    download_url="https://github.com/HumanCompatibleAI/overcooked_ai/archive/refs/tags/1.1.0.tar.gz",
+    url="https://github.com/jieyuzhou42/overcooked_ai_val.git",
     packages=find_packages("src"),
     keywords=["Overcooked", "AI", "Reinforcement Learning"],
     package_dir={"": "src"},

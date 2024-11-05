@@ -454,9 +454,10 @@ class StateVisualizer:
                     soup_status = "idle"
             else:  # grid[x][y] != POT
                 soup_status = "done"
-            frame_name = StateVisualizer._soup_frame_name(
+            '''frame_name = StateVisualizer._soup_frame_name(
                 obj.ingredients, soup_status
-            )
+            )'''
+            frame_name = "soup_idle_tomato_0_onion_1"
             self.SOUPS_IMG.blit_on_surface(
                 surface,
                 self._position_in_unscaled_pixels(obj.position),

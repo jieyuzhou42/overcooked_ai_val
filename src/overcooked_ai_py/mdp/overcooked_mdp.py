@@ -440,280 +440,6 @@ class ObjectState(object):
         obj_dict = copy.deepcopy(obj_dict)
         return ObjectState(**obj_dict)
 
-
-class SoupBaseState(ObjectState):
-    def __init__(
-        self,
-        position,
-        ingredients=[],
-        cooking_tick=-1,
-        cook_time=None,
-        **kwargs
-    ):
-        """
-        Represents a soup object. An object becomes a soup the instant it is placed in a pot. The
-        soup's recipe is a list of ingredient names used to create it. A soup's recipe is undetermined
-        until it has begun cooking.
-
-        position (tupe): (x, y) coordinates in the grid
-        ingrdients (list(ObjectState)): Objects that have been used to cook this soup. Determiens @property recipe
-        cooking (int): How long the soup has been cooking for. -1 means cooking hasn't started yet
-        cook_time(int): How long soup needs to be cooked, used only mostly for getting soup from dict with supplied cook_time, if None self.recipe.time is used
-        """
-        super(SoupState, self).__init__("soupbase", position)
-        self._ingredients = ingredients
-        self._cooking_tick = cooking_tick
-        self._recipe = None
-        self._cook_time = cook_time
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, SoupState)
-            and self.name == other.name
-            and self.position == other.position
-            and self._cooking_tick == other._cooking_tick
-            and all(
-                [
-                    this_i == other_i
-                    for this_i, other_i in zip(
-                        self._ingredients, other._ingredients
-                    )
-                ]
-            )
-        )
-
-    def __hash__(self):
-        ingredient_hash = hash(tuple([hash(i) for i in self._ingredients]))
-        supercls_hash = super().__hash__()
-        return hash((supercls_hash, self._cooking_tick, ingredient_hash))
-
-    def __repr__(self):
-        supercls_str = super().__repr__()
-        ingredients_str = self._ingredients.__repr__()
-        return "{}\nIngredients:\t{}\nCooking Tick:\t{}".format(
-            supercls_str, ingredients_str, self._cooking_tick
-        )
-
-    def __str__(self):
-        res = "{"
-        for ingredient in sorted(self.ingredients):
-            res += Recipe.STR_REP[ingredient]
-        if self.is_cooking:
-            res += str(self._cooking_tick)
-        elif self.is_ready:
-            res += str("✓")
-        return res
-
-    @ObjectState.position.setter
-    def position(self, new_pos):
-        self._position = new_pos
-        for ingredient in self._ingredients:
-            ingredient.position = new_pos
-
-    @property
-    def ingredients(self):
-        return [ingredient.name for ingredient in self._ingredients]
-
-    @property
-    def is_cooking(self):
-        return not self.is_idle and not self.is_ready
-
-    @property
-    def recipe(self):
-        if self.is_idle:
-            raise ValueError(
-                "Recipe is not determined until soup begins cooking"
-            )
-        if not self._recipe:
-            if "onion" and "broth" in self.ingredients:
-                self._recipe = Recipe("onion_soup_base")
-            if "tomato" and "broth" in self.ingredients:
-                self._recipe = Recipe("tomato_soup_base")
-            if  "broth" in self.ingredients:
-                self._recipe = Recipe("soup_base")
-        return self._recipe
-
-    @property
-    def value(self):
-        return self.recipe.value
-
-    @property
-    def cook_time(self):
-        # used mostly when cook time is supplied by state dict
-        if self._cook_time is not None:
-            return self._cook_time
-        else:
-            return self.recipe.time
-
-    @property
-    def cook_time_remaining(self):
-        return max(0, self.cook_time - self._cooking_tick)
-
-    @property
-    def is_ready(self):
-        if self.is_idle:
-            return False
-        return self._cooking_tick >= self.cook_time
-
-    @property
-    def is_idle(self):
-        return self._cooking_tick < 0
-
-    @property
-    def is_full(self):
-        return (
-            not self.is_idle
-            or len(self.ingredients) == Recipe.MAX_NUM_INGREDIENTS
-        )
-
-    def is_valid(self):
-        if not all(
-            [
-                ingredient.position == self.position
-                for ingredient in self._ingredients
-            ]
-        ):
-            return False
-        if len(self.ingredients) > Recipe.MAX_NUM_INGREDIENTS:
-            return False
-        return True
-
-    def auto_finish(self):
-        if len(self.ingredients) == 0:
-            raise ValueError("Cannot finish soup with no ingredients")
-        self._cooking_tick = 0
-        self._cooking_tick = self.cook_time
-
-    def add_ingredient(self, ingredient):
-        if not ingredient.name in Recipe.ALL_INGREDIENTS:
-            raise ValueError("Invalid ingredient")
-        if self.is_full:
-            raise ValueError("Reached maximum number of ingredients in recipe")
-        ingredient.position = self.position
-        self._ingredients.append(ingredient)
-
-    def add_ingredient_from_str(self, ingredient_str):
-        ingredient_obj = ObjectState(ingredient_str, self.position)
-        self.add_ingredient(ingredient_obj)
-
-    def pop_ingredient(self):
-        if not self.is_idle:
-            raise ValueError(
-                "Cannot remove an ingredient from this soup at this time"
-            )
-        if len(self._ingredients) == 0:
-            raise ValueError("No ingredient to remove")
-        return self._ingredients.pop()
-
-    def begin_cooking(self):
-        if not self.is_idle:
-            raise ValueError("Cannot begin cooking this soup at this time")
-        if len(self.ingredients) == 0:
-            raise ValueError(
-                "Must add at least one ingredient to soup before you can begin cooking"
-            )
-        self._cooking_tick = 0
-
-    def cook(self):
-        if self.is_idle:
-            raise ValueError("Must begin cooking before advancing cook tick")
-        if self.is_ready:
-            raise ValueError("Cannot cook a soup that is already done")
-        self._cooking_tick += 1
-
-    def deepcopy(self):
-        return SoupState(
-            self.position,
-            [ingredient.deepcopy() for ingredient in self._ingredients],
-            self._cooking_tick,
-        )
-
-    def to_dict(self):
-        info_dict = super(SoupState, self).to_dict()
-        ingrdients_dict = [
-            ingredient.to_dict() for ingredient in self._ingredients
-        ]
-        info_dict["_ingredients"] = ingrdients_dict
-        info_dict["cooking_tick"] = self._cooking_tick
-        info_dict["is_cooking"] = self.is_cooking
-        info_dict["is_ready"] = self.is_ready
-        info_dict["is_idle"] = self.is_idle
-        info_dict["cook_time"] = -1 if self.is_idle else self.cook_time
-
-        # This is for backwards compatibility w/ overcooked-demo
-        # Should be removed once overcooked-demo is updated to use 'cooking_tick' instead of '_cooking_tick'
-        info_dict["_cooking_tick"] = self._cooking_tick
-        return info_dict
-
-    @classmethod
-    def from_dict(cls, obj_dict):
-        obj_dict = copy.deepcopy(obj_dict)
-        if obj_dict["name"] != "soupbase":
-            return super(SoupBaseState, cls).from_dict(obj_dict)
-
-        if "state" in obj_dict:
-            # Legacy soup representation
-            ingredient, num_ingredient, time = obj_dict["state"]
-            cooking_tick = -1 if time == 0 else time
-            finished = time >= 20
-            if ingredient == Recipe.TOMATO:
-                return SoupBaseState.get_soupbase(
-                    obj_dict["position"],
-                    num_tomatoes=num_ingredient,
-                    cooking_tick=cooking_tick,
-                    finished=finished,
-                )
-            else:
-                return SoupBaseState.get_soupbase(
-                    obj_dict["position"],
-                    num_onions=num_ingredient,
-                    cooking_tick=cooking_tick,
-                    finished=finished,
-                )
-
-        ingredients_objs = [
-            ObjectState.from_dict(ing_dict)
-            for ing_dict in obj_dict["_ingredients"]
-        ]
-        obj_dict["ingredients"] = ingredients_objs
-        return cls(**obj_dict)
-
-    @classmethod
-    def get_soupbase(
-        cls,
-        position,
-        num_broths=1,
-        num_onions=1,
-        num_tomatoes=0,
-        cooking_tick=-1,
-        finished=False,
-        **kwargs
-    ):
-        if num_onions < 0 or num_tomatoes < 0:
-            raise ValueError("Number of active ingredients must be positive")
-        if num_broths <0:
-            raise ValueError("Should have broth to cook soup base")
-        if num_onions + num_tomatoes + num_broths > Recipe.MAX_NUM_INGREDIENTS:
-            raise ValueError("Too many ingredients specified for this soup")
-        if cooking_tick >= 0 and num_tomatoes + num_onions == 0:
-            raise ValueError("_cooking_tick must be -1 for empty soup")
-        if finished and num_tomatoes + num_onions == 0:
-            raise ValueError("Empty soup cannot be finished")
-        onions = [
-            ObjectState(Recipe.ONION, position) for _ in range(num_onions)
-        ]
-        tomatoes = [
-            ObjectState(Recipe.TOMATO, position) for _ in range(num_tomatoes)
-        ]
-        broths = [
-            ObjectState(Recipe.BROTH, position) for _ in range(num_broths)
-        ]
-        ingredients = onions + tomatoes + broths
-        soupbase = cls(position, ingredients, cooking_tick)
-        if finished:
-            soupbase.auto_finish()
-        return soupbase
-
 class SoupState(ObjectState):
     def __init__(
         self,
@@ -976,6 +702,115 @@ class SoupState(ObjectState):
             soup.auto_finish()
         return soup
 
+class SoupBaseState(SoupState):
+    def __init__(
+        self,
+        position,
+        ingredients=[],
+        cooking_tick=-1,
+        cook_time=None,
+        **kwargs
+    ):
+        """
+        Represents a soup object. An object becomes a soup the instant it is placed in a pot. The
+        soup's recipe is a list of ingredient names used to create it. A soup's recipe is undetermined
+        until it has begun cooking.
+
+        position (tupe): (x, y) coordinates in the grid
+        ingrdients (list(ObjectState)): Objects that have been used to cook this soup. Determiens @property recipe
+        cooking (int): How long the soup has been cooking for. -1 means cooking hasn't started yet
+        cook_time(int): How long soup needs to be cooked, used only mostly for getting soup from dict with supplied cook_time, if None self.recipe.time is used
+        """
+        super(SoupState, self).__init__("soupbase", position)
+        self._ingredients = ingredients
+        self._cooking_tick = cooking_tick
+        self._recipe = None
+        self._cook_time = cook_time
+
+    @property
+    def recipe(self):
+        if self.is_idle:
+            raise ValueError(
+                "Recipe is not determined until soup begins cooking"
+            )
+        if not self._recipe:
+            if "onion" and "broth" in self.ingredients:
+                self._recipe = Recipe("onion_soup_base")
+            if "tomato" and "broth" in self.ingredients:
+                self._recipe = Recipe("tomato_soup_base")
+            if  "broth" in self.ingredients:
+                self._recipe = Recipe("soup_base")
+        return self._recipe
+
+
+    @classmethod
+    def from_dict(cls, obj_dict):
+        obj_dict = copy.deepcopy(obj_dict)
+        if obj_dict["name"] != "soupbase":
+            return super(SoupBaseState, cls).from_dict(obj_dict)
+
+        if "state" in obj_dict:
+            # Legacy soup representation
+            ingredient, num_ingredient, time = obj_dict["state"]
+            cooking_tick = -1 if time == 0 else time
+            finished = time >= 20
+            if ingredient == Recipe.TOMATO:
+                return SoupBaseState.get_soupbase(
+                    obj_dict["position"],
+                    num_tomatoes=num_ingredient,
+                    cooking_tick=cooking_tick,
+                    finished=finished,
+                )
+            else:
+                return SoupBaseState.get_soupbase(
+                    obj_dict["position"],
+                    num_onions=num_ingredient,
+                    cooking_tick=cooking_tick,
+                    finished=finished,
+                )
+
+        ingredients_objs = [
+            ObjectState.from_dict(ing_dict)
+            for ing_dict in obj_dict["_ingredients"]
+        ]
+        obj_dict["ingredients"] = ingredients_objs
+        return cls(**obj_dict)
+
+    @classmethod
+    def get_soupbase(
+        cls,
+        position,
+        num_broths=1,
+        num_onions=1,
+        num_tomatoes=0,
+        cooking_tick=-1,
+        finished=False,
+        **kwargs
+    ):
+        if num_onions < 0 or num_tomatoes < 0:
+            raise ValueError("Number of active ingredients must be positive")
+        if num_broths <0:
+            raise ValueError("Should have broth to cook soup base")
+        if num_onions + num_tomatoes + num_broths > Recipe.MAX_NUM_INGREDIENTS:
+            raise ValueError("Too many ingredients specified for this soup")
+        if cooking_tick >= 0 and num_tomatoes + num_onions == 0:
+            raise ValueError("_cooking_tick must be -1 for empty soup")
+        if finished and num_tomatoes + num_onions == 0:
+            raise ValueError("Empty soup cannot be finished")
+        onions = [
+            ObjectState(Recipe.ONION, position) for _ in range(num_onions)
+        ]
+        tomatoes = [
+            ObjectState(Recipe.TOMATO, position) for _ in range(num_tomatoes)
+        ]
+        broths = [
+            ObjectState(Recipe.BROTH, position) for _ in range(num_broths)
+        ]
+        ingredients = onions + tomatoes + broths
+        soupbase = cls(position, ingredients, cooking_tick)
+        if finished:
+            soupbase.auto_finish()
+        return soupbase
 
 class PlayerState(object):
     """
@@ -1818,7 +1653,10 @@ class OvercookedGridworld(object):
                     not self.old_dynamics
                     and self.soup_to_be_cooked_at_location(new_state, i_pos)
                 ):
+                    
                     soup = new_state.get_object(i_pos)
+                    print(soup.name)
+                    print(type(soup))
                     soup.begin_cooking()
 
             elif terrain_type == "P" and player.has_object():
@@ -1843,8 +1681,10 @@ class OvercookedGridworld(object):
 
                     if not new_state.has_object(i_pos):
                         # Pot was empty, add soup to it
-                        new_state.add_object(SoupState(i_pos, ingredients=[]))
-
+                        if player.get_object().name == "broth":
+                            new_state.add_object(SoupBaseState(i_pos, ingredients=[]))
+                        else:
+                            new_state.add_object(SoupState(i_pos, ingredients=[]))
                     # Add ingredient if possible
                     soup = new_state.get_object(i_pos)
                     if not soup.is_full:
@@ -2196,13 +2036,15 @@ class OvercookedGridworld(object):
         if not state.has_object(pos):
             return False
         obj = state.get_object(pos)
-        assert obj.name == "soup", "Object in pot was not soup"
+        assert obj.name in ["soup", "soup_base", "onion_soup_base", "tomato_soup_base"], \
+            "Object in pot was not soup"
         return obj.is_ready
 
     def soup_to_be_cooked_at_location(self, state, pos):
         if not state.has_object(pos):
             return False
         obj = state.get_object(pos)
+        print("soup_to_be_cooked", obj.name)
         return (
             obj.name == "soup"
             and not obj.is_cooking
@@ -3568,66 +3410,3 @@ class OvercookedGridworld(object):
 
         # At last
         return potential
-
-    ##############
-    # DEPRECATED #
-    ##############
-
-    # def calculate_distance_based_shaped_reward(self, state, new_state):
-    #     """
-    #     Adding reward shaping based on distance to certain features.
-    #     """
-    #     distance_based_shaped_reward = 0
-    #
-    #     pot_states = self.get_pot_states(new_state)
-    #     ready_pots = pot_states["tomato"]["ready"] + pot_states["onion"]["ready"]
-    #     cooking_pots = ready_pots + pot_states["tomato"]["cooking"] + pot_states["onion"]["cooking"]
-    #     nearly_ready_pots = cooking_pots + pot_states["tomato"]["partially_full"] + pot_states["onion"]["partially_full"]
-    #     dishes_in_play = len(new_state.player_objects_by_type['dish'])
-    #     for player_old, player_new in zip(state.players, new_state.players):
-    #         # Linearly increase reward depending on vicinity to certain features, where distance of 10 achieves 0 reward
-    #         max_dist = 8
-    #
-    #         if player_new.held_object is not None and player_new.held_object.name == 'dish' and len(nearly_ready_pots) >= dishes_in_play:
-    #             min_dist_to_pot_new = np.inf
-    #             min_dist_to_pot_old = np.inf
-    #             for pot in nearly_ready_pots:
-    #                 new_dist = np.linalg.norm(np.array(pot) - np.array(player_new.position))
-    #                 old_dist = np.linalg.norm(np.array(pot) - np.array(player_old.position))
-    #                 if new_dist < min_dist_to_pot_new:
-    #                     min_dist_to_pot_new = new_dist
-    #                 if old_dist < min_dist_to_pot_old:
-    #                     min_dist_to_pot_old = old_dist
-    #             if min_dist_to_pot_old > min_dist_to_pot_new:
-    #                 distance_based_shaped_reward += self.reward_shaping_params["POT_DISTANCE_REW"] * (1 - min(min_dist_to_pot_new / max_dist, 1))
-    #
-    #         if player_new.held_object is None and len(cooking_pots) > 0 and dishes_in_play == 0:
-    #             min_dist_to_d_new = np.inf
-    #             min_dist_to_d_old = np.inf
-    #             for serving_loc in self.terrain_pos_dict['D']:
-    #                 new_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_new.position))
-    #                 old_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_old.position))
-    #                 if new_dist < min_dist_to_d_new:
-    #                     min_dist_to_d_new = new_dist
-    #                 if old_dist < min_dist_to_d_old:
-    #                     min_dist_to_d_old = old_dist
-    #
-    #             if min_dist_to_d_old > min_dist_to_d_new:
-    #                 distance_based_shaped_reward += self.reward_shaping_params["DISH_DISP_DISTANCE_REW"] * (1 - min(min_dist_to_d_new / max_dist, 1))
-    #
-    #         if player_new.held_object is not None and player_new.held_object.name == 'soup':
-    #             min_dist_to_s_new = np.inf
-    #             min_dist_to_s_old = np.inf
-    #             for serving_loc in self.terrain_pos_dict['S']:
-    #                 new_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_new.position))
-    #                 old_dist = np.linalg.norm(np.array(serving_loc) - np.array(player_old.position))
-    #                 if new_dist < min_dist_to_s_new:
-    #                     min_dist_to_s_new = new_dist
-    #
-    #                 if old_dist < min_dist_to_s_old:
-    #                     min_dist_to_s_old = old_dist
-    #
-    #             if min_dist_to_s_old > min_dist_to_s_new:
-    #                 distance_based_shaped_reward += self.reward_shaping_params["SOUP_DISTANCE_REW"] * (1 - min(min_dist_to_s_new / max_dist, 1))
-    #
-    #     return distance_based_shaped_reward
